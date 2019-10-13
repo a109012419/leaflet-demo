@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel='stylesheet' href='/node_modules/leaflet/dist/leaflet.css'>
+    <script src='/node_modules/leaflet/dist/leaflet-src.js'></script>
+    <script src='/node_modules/leaflet-utfgrid/L.UTFGrid-min.js'></script>
+    <script src='/data/江苏省.js'></script>
+    <title>test</title>
+</head>
+
+<body>
+    <div id="mapid" style="width: 100%; height: 600px;"></div>
+    <script>
+        var mymap = L.map('mapid').setView([31, 100], 7);//地图center用的是[lat,lng],即[纬度，经度]。但geojson里的coordinate用的是[lng,lat]
+ 
+        function g(feature, layer) {
+            // does this feature have a property named popupContent?
+            console.log(layer)
+            if (feature.properties && feature.properties.popupContent) {
+                layer.bindPopup(feature.properties.popupContent);
+            }
+        }
+        var poly = {
+            "type": "Feature",
+            "properties": {
+                "party": "Republican",
+                "popupContent": "This is where the Rockies play!"
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            118,
+                            32
+                        ],
+                        [
+                            118,
+                            33
+                        ],
+                        [
+                            119,
+                            33
+                        ],
+                        [
+                            119,
+                            32
+                        ],
+                        [
+                            118,
+                            32
+                        ]
+                    ]
+                ]
+            }
+        }
+        var geojsonFeature = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Coors Field",
+                        "amenity": "Baseball Stadium",
+                        "popupContent": "This is where the Rockies play!"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [100, 31]
+                    }
+                }, {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "P2",
+                        "amenity": "Baseball Stadium",
+                        "popupContent": "This is P2"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [100, 31.5]
+                    }
+                }
+            ]
+        };
+
+        L.geoJSON(geojsonFeature, {
+            filter: function (feature) {
+                console.log(feature);
+                if (feature.properties.name != 'P2')
+                    return true;
+            },
+            onEachFeature: g
+        }).addTo(mymap);
+    </script>
+</body>
+
+</html>

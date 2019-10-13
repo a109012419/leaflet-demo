@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="node_modules/leaflet/dist/leaflet.css">
+    <script src="node_modules/leaflet/dist/leaflet.js"></script>
+    <script src="node_modules/leaflet.vectorgrid/dist/Leaflet.VectorGrid.js"></script>
+    <style>
+        #mapid {
+            width: 1000px;
+            height: 500px;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <title>vectortile on leaflet</title>
+</head>
+
+<body>
+    <div id="mapid" style="width: 1000px; height: 500px;"></div>
+    <script>
+
+        var mymap = L.map('mapid', {
+            crs: L.CRS.EPSG4326,
+            center: {
+                lon: 118,
+                lat: 31
+            },
+            zoom: 0
+        });
+
+        url = 'http://58.213.133.181:7791/tilemap/global_vector_geodetic/MapServer/tile/{z}/{y}/{x}';
+        var options = {
+            rendererFactory: L.canvas.tile,
+            minZoom: 1,
+        };
+
+        var mvt = L.vectorGrid.protobuf(url, options).addTo(mymap);
+        
+        mymap.fitBounds([
+            [73.44127700000007, 1.6023320100000547],
+            [135.1082181600001, 53.562931020000065]
+        ]);
+
+    </script>
+</body>
+
+</html>

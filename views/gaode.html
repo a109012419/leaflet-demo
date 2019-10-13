@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel='stylesheet' href='node_modules/leaflet/dist/leaflet.css'>
+    <script src='node_modules/leaflet/dist/leaflet-src.js'></script>
+    <title>gaode on leaflet</title>
+</head>
+
+<body>
+    <div id="mapid" style="width: 100%; height: 600px;"></div>
+    <script>
+        var mymap = L.map('mapid').setView([31, 118], 8);
+
+        gaodeurl='http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}';
+        
+        mymap.addLayer(L.tileLayer(gaodeurl, {
+            subdomains: ['1', '2', '3', '4'],
+            minZoom: 1,
+            maxZoom: 19
+        }));
+    </script>
+</body>
+
+</html>

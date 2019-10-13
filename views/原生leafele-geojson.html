@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel='stylesheet' href='node_modules/leaflet/dist/leaflet.css'>
+    <script src='node_modules/leaflet/dist/leaflet-src.js'></script>
+    <script src='node_modules/jquery/dist/jquery.js'></script>
+    <script src='data/江苏省.js'></script>
+    <title>原生leaflet加载geojson</title>
+</head>
+
+<body>
+    <div id="mapid" style="width: 100%; height: 600px;"></div>
+    <script>
+        var data = jiangsu;
+        var mymap = L.map('mapid').setView([32, 118], 8);//地图center用的是[lat,lng],即[纬度，经度]。但geojson里的coordinate用的是[lng,lat]
+
+        //通过外部script引入，将含geojson格式数据的js文件引入进来
+        L.geoJSON(data, {
+            style: function (feature) {
+                switch (feature.properties.name) {
+                    case '南京市': return { color: 'red' };
+                    case '徐州市': return { color: 'green' };
+                    case '常州市': return { color: 'yellow' };
+                }
+            }
+        }).addTo(mymap);
+
+        //使用jquery的ajax方法，从外部文件导入数据(在本地服务器里打开此demo可以避开跨域问题)
+        var loadData = function () {
+            $.ajax("data/polyline.json", {
+                dataType: "json",
+                success: function (response) {
+                    var mystyle = {
+                        fillColor: "#ff7800",
+                        color: "#000",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    };
+                    L.geoJSON(response, {
+                        style: function (feature) {
+                            switch (feature.properties.party) {
+                                case 'Republican': return { color: "#ff0000" };
+                                case 'Democrat': return { color: "#0000ff" };
+                            }
+                        }
+                    }).addTo(mymap);
+                }
+            });
+        }
+        loadData();
+
+        mymap.on('click', function (ev) {
+            console.log(ev.latlng); // ev is an event object (MouseEvent in this case)
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,71 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "party": "Republican"
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            118,
+                            32
+                        ],
+                        [
+                            118,
+                            33
+                        ],
+                        [
+                            119,
+                            33
+                        ],
+                        [
+                            119,
+                            32
+                        ],
+                        [
+                            118,
+                            32
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "party": "Democrat"
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            120,
+                            33
+                        ],
+                        [
+                            120,
+                            33.5
+                        ],
+                        [
+                            120.5,
+                            33.5
+                        ],
+                        [
+                            120.5,
+                            33
+                        ],
+                        [
+                            120,
+                            33
+                        ]
+                    ]
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src='/node_modules/jquery/dist/jquery.min.js'></script>
+    <link rel='stylesheet' href='/node_modules/leaflet/dist/leaflet.css'>
+    <script src='/node_modules/leaflet/dist/leaflet-src.js'></script>
+    <script src='/js/leaflet-timeline-slider.min.js'></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="mapid" style="width: 100%; height: 600px;"></div>
+    <script>
+        data = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "Point1",
+                        "content": "This is NanJing"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            118.5,
+                            32,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "Point2",
+                        "content": "This is ShangHai"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            122,
+                            31,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "Point3",
+                        "content": "This is BeiJing"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            116,
+                            40,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "Point4",
+                        "content": "This is ShenZhen."
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            114,
+                            22.5,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "Point5",
+                        "content": "This is WuHan"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            114.5,
+                            31,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": "Point6",
+                        "content": "This is ChengDu"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            103,
+                            31,
+                            1
+                        ]
+                    }
+                },
+            ]
+        }
+        var mymap = L.map('mapid').setView([22.5, 114], 2);
+        var loadData = function () {
+            $.ajax("/data/中国.json", {
+                dataType: "json",
+                success: function (response) {
+                    var mystyle = {
+                        fillColor: "#ff7800",
+                        color: "#000",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    };
+                    L.geoJSON(response, {
+                        style: function (feature) {
+                            switch (feature.properties.party) {
+                                case 'Republican': return { color: "#ff0000" };
+                                case 'Democrat': return { color: "#0000ff" };
+                            }
+                        }
+                    }).addTo(mymap);
+                }
+            });
+        }
+        loadData();
+
+        getDataAddMarkers = function ({ label, value, map, exclamation }) {
+
+            //清除当前图层（Maker点）
+            map.eachLayer(function (layer) {
+                if (layer instanceof L.Marker) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            //将data对象里的feature和label进行配对
+            filteredData = data.features.filter(function (i, n) {
+                return i.properties.title === label;
+            });
+
+            //创建maker标记数组
+            var markerArray = [];
+            L.geoJson(filteredData, {
+                onEachFeature: function onEachFeature(feature, layer) {
+                    console.log(layer instanceof L.Marker + 'onEachFeature');
+                    content = `${exclamation} <br> ${feature.properties.content} <br> (${Math.round(value / 6 * 100)}% done with story)`
+                    var popup = L.popup().setContent(content);
+                    layer.bindPopup(popup);
+                    markerArray.push(layer); 
+                }
+            }).addTo(map);
+
+            var markerGroup = L.featureGroup(markerArray);
+            map.fitBounds(markerGroup.getBounds()).setZoom(5);
+        };
+
+        L.control.timelineSlider({
+            timelineItems: ["Point1", "Point2", "Point3", "Point4", "Point5", "Point6"],
+            changeMap: getDataAddMarkers,
+            extraChangeMapParams: { exclamation: "Hello!" }
+        })
+            .addTo(mymap);
+    </script>
+</body>
+
+</html>

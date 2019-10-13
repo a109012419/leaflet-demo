@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel='stylesheet' href='../node_modules/leaflet/dist/leaflet.css'>
+    <script src='../node_modules/leaflet/dist/leaflet-src.js'></script>
+    <script src='../js/FileSaver.js'></script>
+    <title>geojson数据下载</title>
+</head>
+
+<body>
+    <p>仅支持下载省、市级的数据</p>
+    <div>
+        <form class="input-form">
+            关键词：
+            <input type="text" id="keywords" value="江苏">
+        </form>
+        <br>
+        <div class="button-div">
+            <button style="height:50px; width:50px;" onclick="getData()">查询</button>请在console里查看数据结果
+            &nbsp&nbsp&nbsp&nbsp
+            <button onclick="renderMap()">渲染地图</button>
+            &nbsp&nbsp&nbsp&nbsp
+            <button onclick="savefile()">下载geojson</button>
+        </div>
+    </div>
+    <div id="mapid" style="width: 100%; height: 600px;"></div>
+    <script>
+        var request;
+        var lastdata;
+
+        function toJson(A) {
+
+            let contentb = new Object();
+            contentb.type = "FeatureCollection";
+            contentb.features = new Array();
+
+
+            for (let i = 0; i < A.length; ++i) {
+
+                let content = JSON.parse(A[i]); //转换为json对象
+                let districts = content['districts'][0];
+                let coordPolylines = districts.polyline.split('|');
+                let coordPolyline = new Array();
+
+                //边界坐标点处理
+                for (let m = 0; m < coordPolylines.length; m++) {
+                    coordPolyline.push(coordPolylines[m].split(';'));
+                }
+                let c = new Array();
+                for (let a = 0; a < coordPolyline.length; a++) {
+                    c[a] = new Array();
+                    for (let b = 0; b < coordPolyline[a].length; b++) {
+                        c[a].push(coordPolyline[a][b].split(','));
+                    }
+                }
+                for (let k = 0; k < c.length; k++) {
+                    for (let n = 0; n < c[k].length; n++) {
+                        c[k][n][0] = parseFloat(c[k][n][0]);
+                        c[k][n][1] = parseFloat(c[k][n][1]);
+                    }
+                }
+
+                contentb.features[i] = new Object();
+                //定义Feature部分
+                contentb.features[i].type = "Feature";
+                contentb.features[i].properties = new Object();
+                contentb.features[i].properties.name = districts.name;
+                contentb.features[i].properties.adcode = districts.adcode;
+                contentb.features[i].properties.level = "district";
+                //定义geometry部分
+                contentb.features[i].geometry = new Object();
+                if (coordPolylines.length == 1) {
+                    contentb.features[i].geometry.type = "Polygon";
+                    contentb.features[i].geometry.coordinates = new Array();
+                    for (let p = 0; p < c.length; p++) {
+                        contentb.features[i].geometry.coordinates[p] = new Array();
+                        for (let u = 0; u < c[p].length; u++) {
+                            contentb.features[i].geometry.coordinates[p].push(c[p][u]);
+                        }
+                    }
+                } else {
+                    contentb.features[i].geometry.type = "MultiPolygon";
+                    contentb.features[i].geometry.coordinates = new Array();
+                    for (let p = 0; p < c.length; p++) {
+                        contentb.features[i].geometry.coordinates[p] = new Array();
+                        contentb.features[i].geometry.coordinates[p].push(c[p]);
+                    }
+                }
+            }
+
+            return JSON.stringify(contentb); //char
+        }
+
+        function getData() {
+            let key = "902c06bb2d36f7c9b9b1f738f1da5ca7";
+            let keywords = document.getElementById('keywords').value;
+            let subdistrict = '1';
+
+            let temp = req(key, keywords, subdistrict);
+
+            //查询下一层级面数据，转为geojson格式并显示在console里
+            let B = getchild(temp);
+            let content = toJson(B);
+            console.log(formatJson(content));
+
+            lastdata = content;
+        }
+        function req(key, keywords, subdistrict, filter) {
+            let requestURL = "https://restapi.amap.com/v3/config/district?";
+            //调取深圳时不需要filter，调取区数据时需要filter
+            if (filter)
+                requestURL += "key=" + key + "&output=json" + "&keywords=" + keywords + "&extensions=all" + "&subdistrict=" + subdistrict + '&filter=' + filter;
+            else
+                requestURL += "key=" + key + "&output=json" + "&keywords=" + keywords + "&extensions=all" + "&subdistrict=" + subdistrict;
+            request = new XMLHttpRequest();
+            request.open('GET', requestURL, false);
+            request.send();
+            return request.response;
+        }
+
+        function getchild(res) {
+
+            let key = "902c06bb2d36f7c9b9b1f738f1da5ca7";
+            let subdistrict = '1';
+
+            let A = new Array();
+            var content = JSON.parse(res);
+            var parentadcode = content['districts'][0]['adcode'];//用于filter
+
+            let child = content['districts'][0].districts;
+
+            if (child[0]) {
+                for (var i = 0; i < child.length; ++i) {
+                    let keywords = child[i].name;
+                    A[i] = req(key, keywords, subdistrict, parentadcode);
+                }
+            }
+            else
+                alert('再往下就没有面数据啦');
+            return A;
+        }
+
+
+        function formatJson(data) {
+            let i = 0,
+                len = data.length,
+                tab = "     ",
+                targetJson = "",
+                indentLevel = 0,
+                inString = false,
+                currentChar = null;
+
+            for (i = 0; i < len; i++) {
+                currentChar = data.charAt(i);
+                switch (currentChar) {
+                    case '{':
+                    case '[':
+                        if (!inString) {
+                            targetJson += currentChar + "\n" + repeat(tab, indentLevel + 1);
+                            indentLevel += 1;
+                        } else {
+                            targetJson += currentChar;
+                        }
+                        break;
+                    case '}':
+                    case ']':
+                        if (!inString) {
+                            indentLevel -= 1;
+                            targetJson += "\n" + repeat(tab, indentLevel) + currentChar;
+                        } else {
+                            targetJson += currentChar;
+                        }
+                        break;
+                    case ',':
+                        if (!inString) {
+                            targetJson += ",\n" + repeat(tab, indentLevel);
+                        } else {
+                            targetJson += currentChar;
+                        }
+                        break;
+                    case ':':
+                        if (!inString) {
+                            targetJson += ": ";
+                        } else {
+                            targetJson += currentChar;
+                        }
+                        break;
+                    case ' ':
+                    case '\n':
+                    case '\t':
+                        if (inString) {
+                            targetJson += currentChar;
+                        }
+                        break;
+                    case '"':
+                        if (i > 0 && data.charAt(i - 1) !== '\\') {
+                            inString = !inString;
+                        }
+                        targetJson += currentChar;
+                        break;
+                    default:
+                        targetJson += currentChar;
+                        break;
+                }
+            }
+            return targetJson;
+        }
+        function repeat(s, count) {
+            return new Array(count + 1).join(s);
+        }
+        function renderMap() {
+            let map = L.map('mapid');
+            geojson = L.geoJson(JSON.parse(lastdata)).addTo(map);
+            geojson.eachLayer(function (layer) {
+                layer.bindPopup(layer.feature.properties.name);
+            });
+            map.setView({ lat: 22.547, lng: 114.085947 }, 0);
+            map.fitBounds(geojson.getBounds());
+        }
+        function savefile() {
+            let blob = new Blob([lastdata], { type: "text/plain;charset=utf-8" });
+            let keywords = document.getElementById('keywords').value;
+            saveAs(blob, keywords+'.json');
+        }
+    </script>
+</body>
+
+</html>

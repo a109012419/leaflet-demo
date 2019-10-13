@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel='stylesheet' href='node_modules/leaflet/dist/leaflet.css'>
+    <title>geojson on leaflet</title>
+</head>
+
+<body>
+    <div id="mapid" style="width: 100%; height: 600px;"></div>
+    <script src='node_modules/leaflet/dist/leaflet-src.js'></script>
+    <script src='node_modules/leaflet.vectorgrid/dist/Leaflet.VectorGrid.min.js'></script>
+    <script src='data/江苏省.js'></script>
+    <script src="node_modules/leaflet-utfgrid/L.UTFGrid-min.js"></script>
+    <script>
+        var mymap = L.map('mapid').setView([31, 118], 8);
+        var data = jiangsu;
+        function selectFromMess() {
+            return arguments[Math.floor(Math.random() * arguments.length)]
+        }
+        L.vectorGrid.slicer(data, {
+            rendererFactory: L.svg.tile,
+            vectorTileLayerStyles: {
+                sliced: function (properties, zoom) {
+                    var ad = properties.adcode;
+                    if(ad==320100)
+                    return {
+                        fillColor:selectFromMess('#800026', '#E31A1C', '#FEB24C', '#B2FE4C', '#FFEDA0'),
+                        fillOpacity: 0.5,
+                        //fillOpacity: 1,
+                        stroke: true,
+                        fill: true,
+                        color: 'black',
+                        //opacity: 0.2,r
+                        weight: 0,
+                    }
+                }
+            },
+        }).addTo(mymap);
+
+        mymap.setView([31, 116], 8);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,111 @@
+        <style>
+            body {
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
+            @media (max-width: 1000px) {
+                header, footer, main {
+                    border: 1px blue solid;
+                    margin: 0 auto;
+                    background-color: #fff;
+                }
+                #d2 {
+                    height: fit-content;
+                }
+            }
+            @media (min-width: 1000px) {
+                header, footer, main {
+                    border: 1px blue solid;
+                    width: 60%;
+                    margin: 0 auto;
+                    background-color: #fff;
+                }
+                #d2 {
+                    height: 426px;
+                }
+            }
+            main {
+                border: 1px blue solid;
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+            h5, h4 {
+                margin: 10px;
+                text-align: center;
+            }
+            /*.resualt-div {
+                border: 1px blue solid;
+                margin: 10px; 
+            }*/
+            .button-div, .input-form {
+                text-align: center;
+                margin: 10px;
+            }
+            #d1, #d2, #rt, #lrt, #lrt2 {
+                margin: 10px;
+                border: 1px blue solid;
+                overflow: auto;
+            }
+            #d1 {
+                height: 100px;
+            }
+            #rt {
+                height: 46px;
+            }
+            /*#lrt, #lrt2 {
+                height: 156px;
+            }*/
+            @media (max-width: 1000px) {
+                #text-div, #map-div {
+                    margin: 10px;
+                    border: 1px blue solid;
+                }
+                #map-div {
+                    height: 346px;
+                }
+                #map {
+                    border: 1px blue solid;
+                    margin: 10px;
+                    height: 323px;
+                }
+            }
+            @media (min-width: 1000px) {
+                #text-div {
+                    flex:1;
+                    margin: 0 5px 10px 10px;
+                    width: 46%;
+                    border: 1px blue solid;
+                    min-width: 0; /*Firefox 需要设置，否则在pre宽度会根据内容宽度变化*/
+                }
+                #map-div {
+                    flex:1;
+                    margin: 0 10px 10px 5px;
+                    width: 46%;
+                    height: 372px;
+                    border: 1px blue solid;
+                }
+                #t1 {
+                    display: flex;
+                }
+                #map {
+                    border: 1px blue solid;
+                    margin: 10px;
+                    height: 349px;
+                }
+            }
+            p {
+                text-align: center;
+                margin: 10px;
+            }
+            #lrt, #lrt2 {
+                height: 169px;
+                min-width: 0;
+            }
+            pre {
+                /*white-space: -moz-pre-wrap; /* Mozilla, supported since 1999 */
+                /*white-space: -pre-wrap; /* Opera */
+                /*white-space: -o-pre-wrap; /* Opera */
+                /*white-space: pre-wrap; /* CSS3 - Text module (Candidate Recommendation) http://www.w3.org/TR/css3-text/#white-space */
+                /*word-wrap: break-word; /* IE 5.5+ */
+            }
+        </style>
