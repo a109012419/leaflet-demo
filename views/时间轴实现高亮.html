@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src='../node_modules/jquery/dist/jquery.min.js'></script>
+    <link rel='stylesheet' href='../node_modules/leaflet/dist/leaflet.css'>
+    <script src='../node_modules/leaflet/dist/leaflet-src.js'></script>
+    <script src='../js/leaflet-timeline-slider.min.js'></script>
+    <script src='../data/中国.js'></script>
+    <title>时间轴+高亮功能</title>
+</head>
+
+<body>
+    <div id="mapid" style="width: 100vw; height: 100vh"></div>
+    <script>
+        let geoJSON;
+        let mymap = L.map('mapid').setView([30, 114], 4);
+        let data = china;
+
+        let positron = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+            opacity: 1
+        }).addTo(mymap);
+
+        let mystyle = {
+            weight: 1,
+            opacity: 1,
+            color: 'White',
+            fillOpacity: 0.7,
+            fillColor: '#FFEDA0'
+        };
+        // geoJSON = L.geoJSON(data, {
+        //     style: mystyle,
+        //     onEachFeature: function onEachFeature(feature, layer) {
+        //         layer.on({
+        //             mouseover: highlightFeature,//鼠标移动上去高亮
+        //             mouseout: resetHighlight,//鼠标移出还原
+        //             click: zoomToFeature//鼠标点击则缩放到feature
+        //         });
+        //     }
+        // }).addTo(mymap);
+
+        L.control.timelineSlider({
+            timelineItems: ["江苏省", "浙江省", "福建省", "广东省", "广西壮族自治区", "云南省"],
+            changeMap: getDataAddMarkers,
+            extraChangeMapParams: { exclamation: "WeclomeTo" }
+        }).addTo(mymap);
+
+        function getDataAddMarkers({ label, value, map, exclamation }) {
+            map.eachLayer(function (layer) {
+                map.removeLayer(layer);
+            });
+            filteredData = data.features.filter(function (i, n) {
+                return i.properties.name === label;
+            });
+            geoJSON=L.geoJson(data, {
+                style: mystyle,
+                onEachFeature: function onEachFeature(feature, layer) {
+                    if (feature.properties.name === label) {
+                        layer.setStyle({
+                            weight: 1,
+                            color: 'black',
+                            fillColor: 'red',
+                            fillOpacity: 0.7
+                        });
+                        //为什么pop不能直接出来
+                        content = `${exclamation} ${feature.properties.name} <br> (${Math.round(value / 6 * 100)}% done with story)`;
+                        let pop = L.popup().setContent(content);
+                        layer.bindPopup(pop);
+                        pop.openPopup();
+                    }
+                    layer.on({
+                        mouseover: highlightFeature,//鼠标移动上去高亮
+                        mouseout: resetHighlight,//鼠标移出还原
+                        click: zoomToFeature//鼠标点击则缩放到feature
+                    }).addTo(mymap);
+                }
+            })
+        }
+
+        function highlightFeature(e) {
+            let layer = e.target;
+
+            //鼠标移动弹出popup显示地名
+            // let content = layer.feature.properties.name;
+            // let popup = L.popup().setContent(content);
+            // layer.bindPopup(popup);
+            L.popup()
+                .setContent(layer.feature.properties.name)
+                .setLatLng(e.latlng)
+                .openOn(mymap);
+
+            layer.setStyle({
+                weight: 1,
+                color: 'black',
+                fillColor: 'red',
+                fillOpacity: 0.7
+            });
+        }
+
+        function resetHighlight(e) {
+            geoJSON.resetStyle(e.target);
+        }
+
+        function zoomToFeature(e) {
+            mymap.fitBounds(e.target.getBounds());//缩放到feature
+        }
+    </script>
+</body>
+
+</html>

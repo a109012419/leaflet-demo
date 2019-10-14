@@ -6,14 +6,19 @@
     <script src='/node_modules/jquery/dist/jquery.min.js'></script>
     <link rel='stylesheet' href='/node_modules/leaflet/dist/leaflet.css'>
     <script src='/node_modules/leaflet/dist/leaflet-src.js'></script>
-    <title>Document</title>
+    <title>高亮功能</title>
 </head>
 
 <body>
-    <div id="mapid" style="width: 100%; height: 600px;"></div>
+    <div id="mapid" style="width: 100vw; height: 100vh"></div>
     <script>
         let geoJSON;
         let mymap = L.map('mapid').setView([30, 114], 4);
+
+        var positron = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+            opacity: 1
+        }).addTo(mymap);
+
         let loadData = function () {
             $.ajax("/data/中国.json", {
                 dataType: "json",
@@ -43,6 +48,15 @@
         function highlightFeature(e) {
             let layer = e.target;
 
+            //鼠标移动弹出popup显示地名
+            // let content = layer.feature.properties.name;
+            // let popup = L.popup().setContent(content);
+            // layer.bindPopup(popup);
+			L.popup()
+				.setContent(layer.feature.properties.name)
+				.setLatLng(e.latlng)
+				.openOn(mymap);
+
             layer.setStyle({
                 weight: 1,
                 color: 'black',
@@ -56,7 +70,7 @@
         }
 
         function zoomToFeature(e) {
-            mymap.fitBounds(e.target.getBounds());
+            mymap.fitBounds(e.target.getBounds());//缩放到feature
         }
     </script>
 </body>
