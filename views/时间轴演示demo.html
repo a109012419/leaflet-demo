@@ -19,7 +19,8 @@
         L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
             opacity: 1
         }).addTo(mymap);
-
+        
+        //普通feature的style
         let mystyle = {
             weight: 1,
             opacity: 1,
@@ -27,58 +28,22 @@
             fillOpacity: 0.7,
             fillColor: '#87CEEB'
         };
+        //用于高亮显示的style
+        let highlightstyle = {
+            weight: 1,
+            opacity: 1,
+            color: 'black',
+            fillColor: '#FF4500',
+            fillOpacity: 0.7
+        };
 
         let getDataAddMarkers = function ({ label, value, map, exclamation }) {
             let loadData = function () {
                 $.ajax("/data/中国.json", {
                     dataType: "json",
                     success: function (response) {
-                        let mystyle = {
-                            weight: 1,
-                            opacity: 1,
-                            color: 'white',
-                            fillOpacity: 0.7,
-                            fillColor: '#87CEEB'
-                        };
-                        let data = response;
-                        filteredData = data.features.filter(function (i, n) {
-                            return i.properties.name === label;
-                        });
-
-                        geoJSON = L.geoJson(data, {
-                            style: mystyle,
-                            onEachFeature: function onEachFeature(feature, layer) {
-
-                                //筛选出与时间轴对应的feature
-                                if (feature.properties.name === label) {
-                                    //高亮显示
-                                    layer.setStyle({
-                                        weight: 1,
-                                        color: 'black',
-                                        fillColor: '#1E90FF',
-                                        fillOpacity: 0.7
-                                    });
-
-                                    let content = `${feature.properties.name} <br> 这是时间轴上第${value}个点`;
-                                    let latlng = [feature.properties.center[1], feature.properties.center[0]];//获取feature中心点坐标，并换成[纬,经]
-
-                                    //缩放到filter出的feature
-                                    mymap.fitBounds(layer.getBounds());
-
-                                    //弹窗显示时间轴对应的feature
-                                    L.popup()
-                                        .setContent(content)
-                                        .setLatLng(latlng)
-                                        .openOn(mymap);
-                                }
-                                //其它的保持鼠标移动高亮和缩放功能
-                                layer.on({
-                                    mouseover: highlightFeature,//鼠标移动上去高亮
-                                    mouseout: resetHighlight,//鼠标移出还原
-                                    click: zoomToFeature//鼠标点击则缩放到feature
-                                }).addTo(mymap);
-                            }
-                        })
+                        //已读取到数据,进行矢量地图、时间轴等功能的加载
+                        main(response, { label, value, map, exclamation });
                     }
                 });
             }
@@ -90,6 +55,43 @@
             changeMap: getDataAddMarkers,
             extraChangeMapParams: { exclamation: "WeclomeTo" }
         }).addTo(mymap);
+
+        function main(data, { label, value, map, exclamation }) {
+            geoJSON = L.geoJson(data, {
+                style: mystyle,
+                onEachFeature: function onEachFeature(feature, layer) {
+
+                    //筛选出与时间轴对应的feature
+                    if (feature.properties.name === label) {
+                        //独特显示
+                        layer.setStyle({
+                            weight: 1,
+                            color: 'black',
+                            fillColor: '#1E90FF',
+                            fillOpacity: 0.7
+                        });
+
+                        let content = `${feature.properties.name} <br> 这是时间轴上第${value}个点`;
+                        let latlng = [feature.properties.center[1], feature.properties.center[0]];//获取feature中心点坐标，并换成[纬,经]
+
+                        //缩放到filter出的feature
+                        mymap.fitBounds(layer.getBounds());
+
+                        //弹窗显示时间轴对应的feature
+                        L.popup()
+                            .setContent(content)
+                            .setLatLng(latlng)
+                            .openOn(mymap);
+                    }
+                    //其它的保持鼠标移动高亮和缩放功能
+                    layer.on({
+                        mouseover: highlightFeature,//鼠标移动上去高亮
+                        mouseout: resetHighlight,//鼠标移出还原
+                        click: zoomToFeature//鼠标点击则缩放到feature
+                    }).addTo(mymap);
+                }
+            })
+        }
 
         function highlightFeature(e) {
             let layer = e.target;
@@ -103,12 +105,7 @@
                 .openOn(mymap);
 
             //高亮style显示
-            layer.setStyle({
-                weight: 1,
-                color: 'black',
-                fillColor: '#FF4500',
-                fillOpacity: 0.7
-            });
+            layer.setStyle(highlightstyle);
         }
 
         function resetHighlight(e) {
