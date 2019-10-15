@@ -18,7 +18,7 @@
         let mymap = L.map('mapid').setView([30, 114], 4);
         let data = china;
 
-        let positron = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+        L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
             opacity: 1
         }).addTo(mymap);
 
@@ -29,46 +29,40 @@
             fillOpacity: 0.7,
             fillColor: '#FFEDA0'
         };
-        // geoJSON = L.geoJSON(data, {
-        //     style: mystyle,
-        //     onEachFeature: function onEachFeature(feature, layer) {
-        //         layer.on({
-        //             mouseover: highlightFeature,//鼠标移动上去高亮
-        //             mouseout: resetHighlight,//鼠标移出还原
-        //             click: zoomToFeature//鼠标点击则缩放到feature
-        //         });
-        //     }
-        // }).addTo(mymap);
 
-        L.control.timelineSlider({
-            timelineItems: ["江苏省", "浙江省", "福建省", "广东省", "广西壮族自治区", "云南省"],
-            changeMap: getDataAddMarkers,
-            extraChangeMapParams: { exclamation: "WeclomeTo" }
-        }).addTo(mymap);
+        let getDataAddMarkers = function ({ label, value, map, exclamation }) {
 
-        function getDataAddMarkers({ label, value, map, exclamation }) {
-            map.eachLayer(function (layer) {
-                map.removeLayer(layer);
-            });
             filteredData = data.features.filter(function (i, n) {
                 return i.properties.name === label;
             });
-            geoJSON=L.geoJson(data, {
+
+            geoJSON = L.geoJson(data, {
                 style: mystyle,
                 onEachFeature: function onEachFeature(feature, layer) {
+
+                    //筛选出与时间轴对应的feature
                     if (feature.properties.name === label) {
+                        //高亮显示
                         layer.setStyle({
                             weight: 1,
                             color: 'black',
-                            fillColor: 'red',
+                            fillColor: '#7AC5CD',
                             fillOpacity: 0.7
                         });
-                        //为什么pop不能直接出来
-                        content = `${exclamation} ${feature.properties.name} <br> (${Math.round(value / 6 * 100)}% done with story)`;
-                        let pop = L.popup().setContent(content);
-                        layer.bindPopup(pop);
-                        pop.openPopup();
+
+                        let content = `${feature.properties.name} <br> 这是时间轴上第${value}个点`;
+                        let latlng = [feature.properties.center[1], feature.properties.center[0]];//获取feature中心点坐标，并换成[纬,经]
+
+                        //缩放到filter出的feature
+                        mymap.fitBounds(layer.getBounds());
+
+                        //弹窗显示时间轴对应的feature
+                        L.popup()
+                            .setContent(content)
+                            .setLatLng(latlng)
+                            .openOn(mymap);
                     }
+                    //其它的保持鼠标移动高亮和缩放功能
                     layer.on({
                         mouseover: highlightFeature,//鼠标移动上去高亮
                         mouseout: resetHighlight,//鼠标移出还原
@@ -78,9 +72,14 @@
             })
         }
 
+        L.control.timelineSlider({
+            timelineItems: ["江苏省", "四川省", "青海省", "广东省", "陕西省", "云南省"],
+            changeMap: getDataAddMarkers,
+            extraChangeMapParams: { exclamation: "WeclomeTo" }
+        }).addTo(mymap);
+
         function highlightFeature(e) {
             let layer = e.target;
-
             //鼠标移动弹出popup显示地名
             // let content = layer.feature.properties.name;
             // let popup = L.popup().setContent(content);
@@ -90,6 +89,7 @@
                 .setLatLng(e.latlng)
                 .openOn(mymap);
 
+            //高亮style显示
             layer.setStyle({
                 weight: 1,
                 color: 'black',
@@ -99,6 +99,7 @@
         }
 
         function resetHighlight(e) {
+            //还原默认style
             geoJSON.resetStyle(e.target);
         }
 
