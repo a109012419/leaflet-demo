@@ -7,7 +7,6 @@
     <link rel='stylesheet' href='../node_modules/leaflet/dist/leaflet.css'>
     <script src='../node_modules/leaflet/dist/leaflet-src.js'></script>
     <script src='../js/leaflet-timeline-slider.min.js'></script>
-    <script src='../data/中国.js'></script>
     <title>时间轴演示demo</title>
 </head>
 
@@ -16,7 +15,6 @@
     <script>
         let geoJSON;
         let mymap = L.map('mapid').setView([30, 114], 4);
-        let data = china;
 
         L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
             opacity: 1
@@ -31,45 +29,60 @@
         };
 
         let getDataAddMarkers = function ({ label, value, map, exclamation }) {
-
-            filteredData = data.features.filter(function (i, n) {
-                return i.properties.name === label;
-            });
-
-            geoJSON = L.geoJson(data, {
-                style: mystyle,
-                onEachFeature: function onEachFeature(feature, layer) {
-
-                    //筛选出与时间轴对应的feature
-                    if (feature.properties.name === label) {
-                        //高亮显示
-                        layer.setStyle({
+            let loadData = function () {
+                $.ajax("/data/中国.json", {
+                    dataType: "json",
+                    success: function (response) {
+                        let mystyle = {
                             weight: 1,
-                            color: 'black',
-                            fillColor: '#1E90FF',
-                            fillOpacity: 0.7
+                            opacity: 1,
+                            color: 'white',
+                            fillOpacity: 0.7,
+                            fillColor: '#87CEEB'
+                        };
+                        let data = response;
+                        filteredData = data.features.filter(function (i, n) {
+                            return i.properties.name === label;
                         });
 
-                        let content = `${feature.properties.name} <br> 这是时间轴上第${value}个点`;
-                        let latlng = [feature.properties.center[1], feature.properties.center[0]];//获取feature中心点坐标，并换成[纬,经]
+                        geoJSON = L.geoJson(data, {
+                            style: mystyle,
+                            onEachFeature: function onEachFeature(feature, layer) {
 
-                        //缩放到filter出的feature
-                        mymap.fitBounds(layer.getBounds());
+                                //筛选出与时间轴对应的feature
+                                if (feature.properties.name === label) {
+                                    //高亮显示
+                                    layer.setStyle({
+                                        weight: 1,
+                                        color: 'black',
+                                        fillColor: '#1E90FF',
+                                        fillOpacity: 0.7
+                                    });
 
-                        //弹窗显示时间轴对应的feature
-                        L.popup()
-                            .setContent(content)
-                            .setLatLng(latlng)
-                            .openOn(mymap);
+                                    let content = `${feature.properties.name} <br> 这是时间轴上第${value}个点`;
+                                    let latlng = [feature.properties.center[1], feature.properties.center[0]];//获取feature中心点坐标，并换成[纬,经]
+
+                                    //缩放到filter出的feature
+                                    mymap.fitBounds(layer.getBounds());
+
+                                    //弹窗显示时间轴对应的feature
+                                    L.popup()
+                                        .setContent(content)
+                                        .setLatLng(latlng)
+                                        .openOn(mymap);
+                                }
+                                //其它的保持鼠标移动高亮和缩放功能
+                                layer.on({
+                                    mouseover: highlightFeature,//鼠标移动上去高亮
+                                    mouseout: resetHighlight,//鼠标移出还原
+                                    click: zoomToFeature//鼠标点击则缩放到feature
+                                }).addTo(mymap);
+                            }
+                        })
                     }
-                    //其它的保持鼠标移动高亮和缩放功能
-                    layer.on({
-                        mouseover: highlightFeature,//鼠标移动上去高亮
-                        mouseout: resetHighlight,//鼠标移出还原
-                        click: zoomToFeature//鼠标点击则缩放到feature
-                    }).addTo(mymap);
-                }
-            })
+                });
+            }
+            loadData();
         }
 
         L.control.timelineSlider({
