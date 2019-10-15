@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src='../node_modules/jquery/dist/jquery.min.js'></script>
+    <link rel='stylesheet' href='../node_modules/leaflet/dist/leaflet.css'>
+    <script src='../node_modules/leaflet/dist/leaflet-src.js'></script>
+    <script src='../js/leaflet-timeline-slider.min.js'></script>
+    <title>时间轴演示demo</title>
+</head>
+
+<body>
+    <div id="mapid" style="width: 100vw; height: 100vh"></div>
+    <script>
+        let geoJSON;
+        let mymap = L.map('mapid').setView([30, 114], 4);
+
+        L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+            opacity: 1
+        }).addTo(mymap);
+
+        let mystyle = {
+            weight: 1,
+            opacity: 1,
+            color: 'white',
+            fillOpacity: 0.7,
+            fillColor: '#87CEEB'
+        };
+
+        let getDataAddMarkers = function ({ label, value, map, exclamation }) {
+            let loadData = function () {
+                $.ajax("/data/中国.json", {
+                    dataType: "json",
+                    success: function (response) {
+                        let mystyle = {
+                            weight: 1,
+                            opacity: 1,
+                            color: 'white',
+                            fillOpacity: 0.7,
+                            fillColor: '#87CEEB'
+                        };
+                        let data = response;
+                        filteredData = data.features.filter(function (i, n) {
+                            return i.properties.name === label;
+                        });
+
+                        geoJSON = L.geoJson(data, {
+                            style: mystyle,
+                            onEachFeature: function onEachFeature(feature, layer) {
+
+                                //筛选出与时间轴对应的feature
+                                if (feature.properties.name === label) {
+                                    //高亮显示
+                                    layer.setStyle({
+                                        weight: 1,
+                                        color: 'black',
+                                        fillColor: '#1E90FF',
+                                        fillOpacity: 0.7
+                                    });
+
+                                    let content = `${feature.properties.name} <br> 这是时间轴上第${value}个点`;
+                                    let latlng = [feature.properties.center[1], feature.properties.center[0]];//获取feature中心点坐标，并换成[纬,经]
+
+                                    //缩放到filter出的feature
+                                    mymap.fitBounds(layer.getBounds());
+
+                                    //弹窗显示时间轴对应的feature
+                                    L.popup()
+                                        .setContent(content)
+                                        .setLatLng(latlng)
+                                        .openOn(mymap);
+                                }
+                                //其它的保持鼠标移动高亮和缩放功能
+                                layer.on({
+                                    mouseover: highlightFeature,//鼠标移动上去高亮
+                                    mouseout: resetHighlight,//鼠标移出还原
+                                    click: zoomToFeature//鼠标点击则缩放到feature
+                                }).addTo(mymap);
+                            }
+                        })
+                    }
+                });
+            }
+            loadData();
+        }
+
+        L.control.timelineSlider({
+            timelineItems: ["江苏省", "四川省", "青海省", "广东省", "陕西省", "云南省"],
+            changeMap: getDataAddMarkers,
+            extraChangeMapParams: { exclamation: "WeclomeTo" }
+        }).addTo(mymap);
+
+        function highlightFeature(e) {
+            let layer = e.target;
+            //鼠标移动弹出popup显示地名
+            // let content = layer.feature.properties.name;
+            // let popup = L.popup().setContent(content);
+            // layer.bindPopup(popup);
+            L.popup()
+                .setContent(layer.feature.properties.name)
+                .setLatLng(e.latlng)
+                .openOn(mymap);
+
+            //高亮style显示
+            layer.setStyle({
+                weight: 1,
+                color: 'black',
+                fillColor: '#FF4500',
+                fillOpacity: 0.7
+            });
+        }
+
+        function resetHighlight(e) {
+            //还原默认style
+            geoJSON.resetStyle(e.target);
+        }
+
+        function zoomToFeature(e) {
+            mymap.fitBounds(e.target.getBounds());//缩放到feature
+        }
+    </script>
+</body>
+
+</html>
